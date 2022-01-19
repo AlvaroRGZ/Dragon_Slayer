@@ -1,14 +1,13 @@
-% Practica prolog
+/*
+Álvaro Rodríguez Gómez
+Inteligencia artificial.
+Universidad de La Laguna. 2021 - 2022
+Juego simple en prolog
+*/
 
+:- dynamic esta_en/2, estoy_en/1, vivo/1, vida/1, tanque_arma/1. /* Para SWI-Prolog */
 
-/* SPIDER -- a sample adventure game, by David Matuszek.
-   Consult this file and issue the command "start."  */
-
-:- dynamic esta_en/2, estoy_en/1, vivo/1, vida/1, tanque_arma/1. /* Needed by SWI-Prolog. */
-
-/* This defines my current location. */
-
-% este hecho representa nuetra situcion en el mapa
+% Este hecho representa nuetra situcion en el mapa
 
 estoy_en(intro).
 
@@ -66,16 +65,15 @@ camino(taberna,  e, taberna) :-
 camino(herreria, s, centro).
 camino(puerta,   a, centro).
 
-% localizacion de objetos en el mapa
+% Localizacion de objetos en el mapa
 
 esta_en(llave,      padre).
 esta_en(cubo,       hab1).
 esta_en(cuerda,     hab2).
-%esta_en(cuerda,     taberna).
 esta_en(padre,      taberna).
 esta_en(dragon,     puerta).
-esta_en(pistola, herreria).
-esta_en(espada,     mano).
+esta_en(pistola,    herreria).
+esta_en(espada,     taberna).
 
 % Agentes con vida
 
@@ -89,13 +87,13 @@ tanque_arma(vacio).
 % Obtencion de objetos hacia el inventario
 
 coger(X) :-
-        esta_en(X, inventario),
+        esta_en(X, inventario), !,
         write('Ya lo tienes guardado en el inventario.'),
         nl.
 
 coger(X) :-
         estoy_en(Lugar),
-        esta_en(X, Lugar),
+        esta_en(X, Lugar), !,
         retract(esta_en(X, Lugar)),
         assert(esta_en(X, inventario)),
         write('Has guardado '), 
@@ -105,17 +103,18 @@ coger(X) :-
 
 coger(_) :-
         write('No lo encuentro por aqui...'),
-        nl.
+        nl, 
+				fail.
 
 % Colocar objeto en la mano para usarlo
 
 sostener(X) :-
-        esta_en(X, mano),
+        esta_en(X, mano), !,
         write('Ya lo tienes en la mano.'),
         nl.
 
 sostener(X) :-
-				esta_en(X, inventario),
+				esta_en(X, inventario), 
 				esta_en(Y, mano),
 				retract(esta_en(X, inventario)),
 				retract(esta_en(Y, mano)),
@@ -124,25 +123,26 @@ sostener(X) :-
 				
         write('Ahora tienes '),
         write(X),
-        write(' en las manos.'), nl.
+        write(' en las manos.'), !, nl.
 
 sostener(X) :-
-				esta_en(X, inventario),
+				esta_en(X, inventario), 
 				retract(esta_en(X, inventario)),
         assert(esta_en(X, mano)),
         write('Ahora tienes '), 
         write(X),
-        write(' en las manos.'), nl.
+        write(' en las manos.'), !, nl.
 
 sostener(_) :-
         write('No tienes eso en el inventario.'),
-        nl.
+        nl,
+				fail.
 
 % Colocar objeto de la mano al inventario
 
 %guardar(X) :-
 %				esta_en(X, inventario),
-%				write('Ya lo tienes en el inventario.'),
+%				write('Ya lo tienes en el inventario.'), !,
 %				nl.
 				
 guardar :-
@@ -152,7 +152,7 @@ guardar :-
 				
 				write('Has guardado '),
 				write(X),
-				write(' en el inventario.'), nl.
+				write(' en el inventario.'), !, nl.
 	
 guardar :-
 				write('No tienes nada en la mano.'), nl.
@@ -166,51 +166,53 @@ soltar(X, Lugar) :-
         assert(esta_en(X, lugar)),
         write('Has dejado caer '),
         write(X),
-        write(' al suelo.'),
+        write(' al suelo.'), !,
         nl.
 
 soltar(X) :-
-        esta_en(X, inventario),
+        esta_en(X, inventario), 
         estoy_en(Lugar),
         retract(esta_en(X, inventario)),
-        assert(esta_en(X, lugar)),
+        assert(esta_en(X, Lugar)),
         write('Has dejado caer '),
         write(X),
-        write(' al suelo.'),
+        write(' al suelo.'), !,
         nl.
 
 soltar(_) :-
         write('No lo tienes en el inventario.'),
-        nl.
+        nl, !,
+				fail.
 
 % Quita los objetos de la mano o el inventario al usarlos
 
 quitar_objeto(X, Lugar) :-
 				esta_en(X, mano),
 				retract(esta_en(X, mano)),
-        assert(esta_en(X, Lugar)).
+        assert(esta_en(X, Lugar)), !.
 
 quitar_objeto(X) :-
-				esta_en(X, mano),
+				esta_en(X, mano), !,
         estoy_en(Y),
 				retract(esta_en(X, mano)),
-        assert(esta_en(X, Y)).
+        assert(esta_en(X, Y)), !.
 
 % Para ver el inventario y lo que tiene en las manos
 
 ver_inventario :- 
-				write('INVENTARIO: '),
-				objetos_en(inventario), !.
+				write('INVENTARIO: '), !,
+				objetos_en(inventario).
 
 ver_mano :- 
-				esta_en(X, mano),
+				esta_en(X, mano), !,
 				write('EN MANO: '),
 				write(X).
 
 ver_mano :-
-	write('No tengo nada en la mano').	
+	write('No tengo nada en la mano'),
+	fail.	
 
-% Funciones para movernos 
+% Funciones para movernos e interactuar con el entorno.
 
 w :- ir(w).
 
@@ -222,6 +224,16 @@ d :- ir(d).
 
 e :- ir(e).
 				
+m :- mirar.
+
+i :- ver_inventario.
+
+g :- ver_mano.
+
+c(Objeto) :- coger(Objeto).
+
+f(Objeto) :- sostener(Objeto).
+
 ir(Direccion) :-
 				estoy_en(Aqui),
 				camino(Aqui, Direccion, Destino),
@@ -235,7 +247,7 @@ ir(_) :-
 /* This rule tells how to look about you. */
 
 mirar :-
-        estoy_en(Lugar),
+        estoy_en(Lugar), !,
         describir(Lugar),
         nl,
 				write('Aqui hay: '),
@@ -247,13 +259,13 @@ mirar :-
    in your vicinity. */
 
 objetos_en(Lugar) :-
-				esta_en(X, Lugar),
+				esta_en(X, Lugar), 
 				write(X),
 				write('  '),
 				fail.
 
 listar_objetos(Lugar) :-
-				esta_en(X, Lugar),
+				esta_en(X, Lugar), !,
 				write(X),
 				write(', ').
 
@@ -269,7 +281,7 @@ matar :-
   write('Empiezas a descargar tu ira sobre el dragon hasta que'), nl,
   write('te quedas sin agua... El dragon se ha quedado convertido'), nl,
   write('en una gran estatua de obsidiana humeante. Has conseguido'), nl,
-  write('salvar al pueblo de ese monstruo.'), nl.
+  write('salvar al pueblo de ese monstruo.'), !, nl.
 
 matar :-
   estoy_en(puerta),
@@ -281,14 +293,14 @@ matar :-
   write('esbozas una sonrisita y pulsas el gatillo!!'), nl,
   write('Oh... vaya... La pistola esta vacia... Ahora es al dragon a quien'), nl,
   write('se le escapa la sonrisita. Te da tiempo a correr hacia el centro'), nl,
-  write('a buscar la manera de cargarla.'), nl.
+  write('a buscar la manera de cargarla.'), !, nl.
 
 matar :-
   estoy_en(puerta),
 	esta_en(pistola, mano),
 	tanque_arma(vacio),
   write('¿Como se te ocurre volver a hacer lo mismo?'), nl,
-  write('Esta vez el dragon no te perdona y te come vivo.'), nl.
+  write('Esta vez el dragon no te perdona y te come vivo.'), !, nl.
 
 matar :-
 				estoy_en(puerta),
@@ -301,7 +313,7 @@ matar :-
         write('acercarte lo suficiente. El dragon se rie de ti y te '), nl,
         write('lanza una gran llamarada que casi te quema vivo. No ha '), nl,
         write('sido buena idea usar la espada. Corres despavorido hacia'),
-        write(' el pozo del pueblo.'), nl.
+        write(' el pozo del pueblo.'), !, nl.
 
 matar :-
 				estoy_en(puerta),
@@ -317,25 +329,20 @@ matar :-
         write('la proxima vez que juegues piensa un poco mas.'), nl,
 				morir.
 
-/* This rule tells how to die. */
+% Funciones para terminar la partida
 
 morir :-
 	write('HAS MUERTO.'), nl,
   finalizar.
 
-
-/* Under UNIX, the "halt." command quits Prolog but does not
-   remove the output window. On a PC, however, the window
-   disappears before the final output can be seen. Hence this
-   routine requests the user to perform the final "halt." */
-
 finalizar :-
         nl,
-        write('El juego ha acabado. Pulsa CTRL + D o escribe halt. para salir'),
+				write('FIN DE LA PARTIDA'),
+        write('Pulsa CTRL + D o escribe halt. para salir'),
         nl.
 
 
-/* This rule just writes out game instructions. */
+/* Muestra las instrucciones del juego */
 
 instrucciones :-
         nl,
@@ -356,14 +363,13 @@ instrucciones :-
 				write('El simbolo 🚶 representa donde estas en el mapa.'), nl,
         nl.
 
-/* This rule prints out instructions and tells where you are. */
+% sentencia para comenzar el juego.
 
 em :-
         instrucciones,
         mirar.
 
-/* These rules describe the various rooms.  Depending on
-   circumstances, a room may have more than one description. */
+% Describen las escenas y donde nos encontramos.a
 
 describir(intro) :-
 				write('┌───────────────────┬─────────────┬───────────────────┐'), nl,
@@ -391,14 +397,14 @@ describir(intro) :-
 
 describir(intro_centro) :-
 				write('┌───────────────────┬─────────────┬───────────────────┐'), nl,
+				write('│                          🐉                         │'), nl,
 				write('│░░░░░░░░░░░░░░░░░░░│┌───────────┐│░░░░░░░░░░░░░░░░░░░│'), nl,
-				write('│░░░░░░░░░░░░░░░░░░░││           ││░░░░░░░░░░░░░░░░░░░│'), nl,
-				write('│░░░░░░░░░░░░░░░░░░░││           ││░░░░░░░░░░░░░░░░░░░│'), nl,
-				write('│░░░░░░░░░░░░░░░░░░░││           ││░░░░░░░░░░░░░░░░░░░│'), nl,
-				write('│░░░░░░░░░░░░░░░░░░░││        -- ││░░░░░░░░░░░░░░░░░░░│'), nl,
-				write('│░░░░░░░░░░░░░░░░░░░││           ││░░░░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
 				write('├───────────────────┴┴───────────┴┴───────────────────┤'), nl,
-				write('│                                                     │'), nl,
 				write('│     !   !                                           │'), nl,
 				write('│   ! ┌─────┐                                         │'), nl,
 				write('│  ! ┌┘     └┐                                        │'), nl,
@@ -413,7 +419,7 @@ describir(intro_centro) :-
 
 describir(casa) :-
 				write('┌────────────────┬─────┬───────┬─────┬────────────────┐'), nl,
-				write('│░░░░░░░░░░░░░░░░│                   │░░░░░░░░░░░░░░░░│'), nl,
+				write('│░░░░░░░░░░░░░░░░│         W         │░░░░░░░░░░░░░░░░│'), nl,
 				write('│░░░░░░░░░░░░░░░░│                   │░░░░░░░░░░░░░░░░│'), nl,
 				write('│░░░░░░░░░░░░░░░░│                   │░░░░░░░░░░░░░░░░│'), nl,
 				write('│░░░HABITACION░░░│                   │░░░HABITACION░░░│'), nl,
@@ -431,13 +437,13 @@ describir(casa) :-
 				write('│░░░░░░░░░░░░░░░░│                   │░░░░░░░░░░░░░░░░│'), nl,
 				write('│░░░░░░░░░░░░░░░░│                   │░░░░░░░░░░░░░░░░│'), nl,
 				write('└────────────────┴─────┴───────┴─────┴────────────────┘'), nl,
-				write('Mi bonita casa... Habra algo por aqui que me sirva?'), nl.
+				write('Mi bonita casa... ¿Habra algo por aqui que me sirva?'), nl.
 
 describir(hab1) :-
 				write('┌────────────────┬─────┬───────┬─────┬────────────────┐'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
-				(esta_en(cubo, hab1) -> write('│        🧺      │                   │                │');
+				(esta_en(cubo, hab1) -> write('│        🧺       │                   │                │');
 				                        write('│                │                   │                │')), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
@@ -448,8 +454,7 @@ describir(hab1) :-
 				write('│                                                     │'), nl,
 				write('│               ─┤                   ├─               │'), nl,
 				write('│                │                   │                │'), nl,
-				(esta_en(cuerda, hab2) -> write('│                │                   │     CUERDA     │');
-				                          write('│                │                   │                │')), nl,
+				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
@@ -461,8 +466,7 @@ describir(hab2) :-
 				write('┌────────────────┬─────┬───────┬─────┬────────────────┐'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
-				(esta_en(cubo, hab1) -> write('│     CUBO       │                   │                │');
-				                        write('│                │                   │                │')), nl,
+				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
@@ -472,14 +476,14 @@ describir(hab2) :-
 				write('│                                                     │'), nl,
 				write('│               ─┤                   ├─               │'), nl,
 				write('│                │                   │                │'), nl,
-				(esta_en(cuerda, hab2) -> write('│                │                   │     CUERDA     │');
+				(esta_en(cuerda, hab2) -> write('│                │                   │         📿     │');
 				                          write('│                │                   │                │')), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('│                │                   │                │'), nl,
 				write('└────────────────┴─────┴───────┴─────┴────────────────┘'), nl,
-				write('Mi habitacion.'), nl.
+				write('La habitacion de mis padres.'), nl.
 
 describir(centro) :-
         write('┌───────────────┬──────────────┬────────┬─────────────┐'), nl,
@@ -488,7 +492,7 @@ describir(centro) :-
         write('│               └──────────────┘          └┐          │'), nl,
         write('│                      W                   │          │'), nl,
         write('│                                          │          │'), nl,
-        write('├──────┐                             ──────┘          │'), nl,
+        write('├──────┐               POZO          ──────┘          │'), nl,
         write('│      │            E ┌───┐          ║║║║║║           │'), nl,
         write('│  B   │              │ ▒ │          ║║║║║║     🐉    │'), nl,
         write('│  A   │ A            └───┘       D  ║║║║║║           │'), nl,
@@ -511,7 +515,7 @@ describir(pozo) :-
         write('│                                          │          │'), nl,
         write('├──────┐                             ──────┘          │'), nl,
         write('│      │              ┌───┐          ║║║║║║           │'), nl,
-        write('│  B   │            🚶│ ▒ │          ║║║║║║     🐉    │'), nl,
+        write('│  B   │        A   🚶│ ▒ │          ║║║║║║     🐉    │'), nl,
         write('│  A   │              └───┘          ║║║║║║           │'), nl,
         write('│  R   │                             ║║║║║║           │'), nl,
         write('│      │                             ──────┐          │'), nl,
@@ -527,7 +531,7 @@ describir(puerta) :-
 				write('┌───────────────────┬─────────────┬───────────────────┐'), nl,
 				write('│                                                     │'), nl,
 				write('│                                                     │'), nl,
-				write('│                      DRAGONASO                      │'), nl,
+				write('│                          🐉                         │'), nl,
 				write('│                                                     │'), nl,
 				write('│                                                     │'), nl,
 				write('│                                                     │'), nl,
@@ -540,7 +544,7 @@ describir(puerta) :-
 				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
 				write('│░░░░░░░░░░░░░░░░░░░││═══════════││░░░░░░░░░░░░░░░░░░░│'), nl,
 				write('├───────────────────┴┴───────────┴┴───────────────────┤'), nl,
-				write('│                                                     │'), nl,
+				write('│                          A                          │'), nl,
 				write('└─────────────────────────────────────────────────────┘'), nl,
 				write('Estas delante del gigantesco dragon, resopla llamaradas'), nl,
 				write('y tiene pinta de estar muy cabreado. '), nl.
@@ -594,10 +598,10 @@ describir(herreria) :-
 				write('┌───────────┬─────────────────────────────┬───────────┐'), nl,
 				write('├───────────┼─────────────────────────────┼───────────┤'), nl,
 				write('├───────────┼─────────────────────────────┼───────────┤'), nl,
-				write('│     🧸    ┼─────────────────────────────┼───────────┤'), nl,
+				write('│     🧸     ┼─────────────────────────────┼───────────┤'), nl,
 				write('├───────────┼─────────────────────────────┼───────────┤'), nl,
 				write('│───────────┼─────────────────────────────┼───────────┤'), nl,
-				write('│───────────┼─────────────────────────────┤    🔫    │'), nl,
+				write('│───────────┼─────────────────────────────┤    🔫     │'), nl,
 				write('├───────────┴─────────────────────────────┴───────────┤'), nl,
 				write('│                                                     │'), nl,
 				write('│                                                     │'), nl,
@@ -615,21 +619,22 @@ describir(herreria) :-
 describir(taberna) :- 
 				write('┌─────────┬─┬─────────────────────────────────────────┐'), nl,
 				write('│         │ │                                         │'), nl,
-				write('│         │ │ 🕺              LA TABERNA               │'), nl,
+				(esta_en(espada, taberna) ->write('│         │ │ 🕺              LA TABERNA       🗡️      │');
+				                            write('│         │ │ 🕺              LA TABERNA              │')), nl,
 				write('│     🕴️   │ │                DE KVOTHE                │'), nl,
 				write('│         │ │                                         │'), nl,
-				write('│         │ │    🕺                                    │'), nl,
-				write('│         │ │ 🕺                                       │'), nl,
+				write('│         │ │    🕺                                   │'), nl,
+				write('│         │ │ 🕺                                      │'), nl,
 				write('│         │ │                                         │'), nl,
-				write('│         │ │  🕺                                       │'), nl,
+				write('│         │ │  🕺                                     │'), nl,
 				write('│      ┌──┴─┘                                      🚶 │'), nl,
 				write('│      │                                              │'), nl,
 				write('│      │                                              │'), nl,
-				write('│      │                                              │'), nl,
+				write('│      │            e. para hablar con tu padre       │'), nl,
 				write('│      │   PADRE                                      │'), nl,
-				write('│      │    👨 🗝️  LLAVE                              │'), nl,
+				write('│      │    👨 🗝️  LLAVE                            sss   │'), nl,
 				write('│      └──────────────────────────────────────────────┤'), nl,
 				write('│                                                     │'), nl,
 				write('└─────────────────────────────────────────────────────┘'), nl,
-				write('La taberna tan sucia y vacia como siempre. Ahi esta '), nl,
+				write('La taberna tan sucia y llena como siempre. Ahi esta '), nl,
 				write('mi padre, debo pedirle la llave.'), nl.
