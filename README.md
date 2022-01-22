@@ -6,9 +6,10 @@ Juego Dragon Slayer escrito en prolog.
 Necesario para la ejecución del juego.
 
 ### Intalación
-
+```
 $ sudo apt-get install swi-prolog
-
+```
 ### Ejecución
-
+```
 $ swipl -s DragonSlayer.pl
+```
