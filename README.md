@@ -11,4 +11,4 @@ $ sudo apt-get install swi-prolog
 
 ### Ejecución
 
-$ swipl -s Dragon_Slayer.pl
+$ swipl -s DragonSlayer.pl
