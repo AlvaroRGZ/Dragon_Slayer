@@ -244,7 +244,7 @@ ir(Direccion) :-
 ir(_) :-
 	write('No puedo ir por ahi.'),nl.
 
-/* This rule tells how to look about you. */
+% Regla para observar el lugar donde te encuentras
 
 mirar :-
         estoy_en(Lugar), !,
@@ -255,8 +255,7 @@ mirar :-
         nl.
 
 
-/* These rules set up a loop to mention all the objects
-   in your vicinity. */
+% Reglas para mostrar los objetos que hay donde te encuentres
 
 objetos_en(Lugar) :-
 	esta_en(X, Lugar), 
@@ -272,7 +271,7 @@ listar_objetos(Lugar) :-
 %objetos_en(_) :- 
 %	write('Aqui no hay nada que pueda utilizar.'), nl.
 
-/* These rules tell how to handle killing the lion and the spider. */
+% Reglas para matar al dragon
 
 matar :-
 	estoy_en(puerta),
@@ -350,14 +349,15 @@ instrucciones :-
         write('em.                       -- Para comenzar el juego.'), nl,
         write('w.  s.  a.  d.           -- Para moverte en esa direccion.'), nl,
         write('coger(Objeto).           -- Para recoger un objeto.'), nl,
+	write('c(Objeto).               -- Coger abreviado.'), nl,
         write('soltar(Objeto).          -- Para dejar caer el objeto.'), nl,
         write('sostener(Objeto).        -- Para llevar el objeto en la mano.'), nl,
+	write('f(Objeto).               -- Sostener abreviado.'), nl,
         write('guardar.                 -- Para guardar lo que tengas en la mano.'), nl,
         write('matar.                   -- Para atacar a un enemigo.'), nl,
-        write('mirar.                   -- Para mirar a tu alrededor.'), nl,
-        write('ver_inventario.          -- Para abrir el inventario.'), nl,
-        write('ver_inventario.          -- Para abrir el inventario.'), nl,
-        write('ver_mano.                -- Para ver lo que tienes en la mano.'), nl,
+        write('mirar.          || m.    -- Para mirar a tu alrededor.'), nl,
+        write('ver_inventario. || i.    -- Para abrir el inventario.'), nl,
+        write('ver_mano.       || g.    -- Para ver lo que tienes en la mano.'), nl,
         write('Instrucciones.           -- Para volver a ver esta ayuda.'), nl,
         write('halt.                    -- Para parar y salir del juego.'), nl,
 	write('El simbolo 🚶 representa donde estas en el mapa.'), nl,
